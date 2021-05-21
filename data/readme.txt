@@ -1,0 +1,3 @@
+华为查询mml命令：
+外部关系：LST NREXTERNALCELL:;
+链路关系：DSP X2INTERFACE:;
