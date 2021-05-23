@@ -17,8 +17,8 @@ import pandas as pd
 class X2(QWidget):
     def __init__(self):
         super(X2, self).__init__()
-        self.fextern = ''
-        self.fx2 = ''
+        self.fextern = r'./data/外部小区.xlsx'
+        self.fx2 = r'./data/x2.xlsx'
         self.initUI()
 
     def initUI(self):
@@ -73,8 +73,6 @@ class X2(QWidget):
         except:
             pass
 
-
-
     def Save(self):
         pass
 
@@ -108,9 +106,22 @@ class workthread(QThread):
             df_x2 = pd.read_excel(self.fx2, sheet_name='查询X2接口链路', usecols={'NAME', '邻基站标识', '邻基站PLMN标识', 'X2接口状态信息'})
         except:
             self.finishsignal.emit(30)
-        df_extern = df_extern[df_extern['移动网络码']=='11' or df_extern['移动网络码']=='3']
-        dict_extern = pd.Series(df_extern['NAME'] + df_extern["基站标识"])
-        print(dict_extern)
+        print('读取完成')
+        df_extern = df_extern[(df_extern['移动网络码'].apply(str) =="11") | (df_extern['移动网络码'].apply(str) =="3")]
+        # 默认格式为数字，要转换为字符类型
+        df_extern['索引'] = df_extern['NAME'].apply(str) + '_'+ df_extern['基站标识'].apply(str)
+        # 默认格式为字符，不需要转换为字符类型
+        df_x2 = df_x2[(df_x2['邻基站PLMN标识'] == 'MCC:460 MNC:11') & (df_x2['X2接口状态信息'] == '正常')]
+        df_x2['索引'] = df_x2['NAME'] + '_' + df_x2['邻基站标识'].apply(lambda x:x[6:])  # 记住这个切片用法
+
+        # 冗余链路
+        df_redundant = df_x2[~df_x2['索引'].isin(df_extern['索引'])]
+        # 缺失链路
+        df_lack = df_extern[~df_extern['索引'].isin(df_x2['索引'])]
+        print('缺失链路')
+        print(df_lack)
+
+
 
 
 if __name__ == '__main__':
